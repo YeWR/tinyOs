@@ -55,11 +55,13 @@ configuration BlinkToRadioAppC {
 implementation {
   components MainC;
   components LedsC;
+  components ActiveMessageC;
   components BlinkToRadioC as App;
   components new TimerMilliC() as Timer0;
-  components ActiveMessageC;
-  components new AMSenderC(AM_BLINKTORADIO);
-  components new AMReceiverC(AM_BLINKTORADIO);
+  components new AMReceiverC(AM_JOYSTICKMSG) as JoyStickeReceiver;
+  components CarC;
+  components PrintfC;
+  components SerialStartC;
   
 
   App.Boot -> MainC;
@@ -70,4 +72,5 @@ implementation {
   App.AMControl -> ActiveMessageC;
   App.AMSend -> AMSenderC;
   App.Receive -> AMReceiverC;
+  App.Car -> CarC;
 }

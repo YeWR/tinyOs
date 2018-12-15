@@ -48,7 +48,9 @@
  * @date   Feb 1, 2006
  */
 #include <Timer.h>
+#include <Msp430Adc12.h>
 #include "BlinkToRadio.h"
+#include "printf.h"
 
 module BlinkToRadioC {
   uses interface Boot;
@@ -59,6 +61,7 @@ module BlinkToRadioC {
   uses interface AMSend;
   uses interface Receive;
   uses interface SplitControl as AMControl;
+  uses interface Car;
 }
 implementation {
   const msp430adc12_channel_config_t config1 = {
@@ -82,8 +85,9 @@ implementation {
         sampcon_ssel: SAMPCON_SOURCE_SMCLK,
         sampcon_id: SAMPCON_CLOCK_DIV_1
     };
-  uint16_t counter;
+  uint16_t counter = 0;
   message_t pkt;
+  BlinkToRadioMsg temp;
   bool busy = FALSE;
 
   void setLeds(uint16_t val) {
@@ -100,6 +104,12 @@ implementation {
     else
       call Leds.led2Off();
   }
+
+  void resetLeds() {
+        call Leds.led0Off();
+        call Leds.led1Off();
+        call Leds.led2Off();
+    }
 
   event void Boot.booted() {
     call AMControl.start();
@@ -141,10 +151,40 @@ implementation {
   }
 
   event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len){
-    if (len == sizeof(BlinkToRadioMsg)) {
-      BlinkToRadioMsg* btrpkt = (BlinkToRadioMsg*)payload;
-      setLeds(btrpkt->counter);
+    if (len != sizeof(BlinkToRadioMsg)) {
+      return NULL;
     }
+
+    BlinkToRadioMsg* recvPayload = (BlinkToRadioMsg *)payload;
+    BlinkToRadioMsg* sendPayload = (BlinkToRadioMsg *)(call Packet.getPayload(&pkt, sizeof(BlinkToRadioMsg)));
+    if (sendPayload == NULL){
+      call Leds.led0On();
+      return NULL;
+    }
+
+    temp.type = recvPayload->type;
+    temp.data = recvPayload->data;
+    setLeds(temp.type);
+
+    switch(temp.type){
+      case 1: call Car.Angle(temp.data); break;
+      case 2: call Car.Forward(temp.data); break;
+      case 3: call Car.Back(temp.data); break;
+      case 4: call Car.Left(temp.data); break;
+      case 5: call Car.Right(temp.data); break;
+      case 6: call Car.Pause(); break;
+      case 7: call Car.Angle_Senc(temp.data); break;
+      case 8: call Car.Angle_Third(temp.data); break;
+      case 9: call Car.Angle_Init(); break;
+      default: resetLeds();
+    }
+
+    memcpy(sendPayload, recvPayload ,sizeof(BlinkToRadioMsg));
+
+    if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(BlinkToRadioMsg)) == SUCCESS) {
+      busy = TRUE;
+    }
+    
     return msg;
   }
 }
