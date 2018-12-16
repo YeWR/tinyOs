@@ -48,9 +48,9 @@
  * @date   Feb 1, 2006
  */
 #include <Timer.h>
-#include <Msp430Adc12.h>
+#include <Msp430Adc12.h> 
+#include <printf.h>
 #include "BlinkToRadio.h"
-#include "printf.h"
 
 module BlinkToRadioC {
   uses interface Boot;
@@ -64,30 +64,9 @@ module BlinkToRadioC {
   uses interface Car;
 }
 implementation {
-  const msp430adc12_channel_config_t config1 = {
-        inch: INPUT_CHANNEL_A6,
-        sref: REFERENCE_VREFplus_AVss,
-        ref2_5v: REFVOLT_LEVEL_2_5,
-        adc12ssel: SHT_SOURCE_ACLK,
-        adc12div: SHT_CLOCK_DIV_1,
-        sht: SAMPLE_HOLD_4_CYCLES,
-        sampcon_ssel: SAMPCON_SOURCE_SMCLK,
-        sampcon_id: SAMPCON_CLOCK_DIV_1
-    };
-
-    const msp430adc12_channel_config_t config2 = {
-        inch: INPUT_CHANNEL_A7,
-        sref: REFERENCE_VREFplus_AVss,
-        ref2_5v: REFVOLT_LEVEL_2_5,
-        adc12ssel: SHT_SOURCE_ACLK,
-        adc12div: SHT_CLOCK_DIV_1,
-        sht: SAMPLE_HOLD_4_CYCLES,
-        sampcon_ssel: SAMPCON_SOURCE_SMCLK,
-        sampcon_id: SAMPCON_CLOCK_DIV_1
-    };
+  
   uint16_t counter = 0;
   message_t pkt;
-  BlinkToRadioMsg temp;
   bool busy = FALSE;
 
   void setLeds(uint16_t val) {
@@ -105,14 +84,11 @@ implementation {
       call Leds.led2Off();
   }
 
-  void resetLeds() {
-        call Leds.led0Off();
-        call Leds.led1Off();
-        call Leds.led2Off();
-    }
-
   event void Boot.booted() {
     call AMControl.start();
+    call Leds.set(7);
+    call Car.start();
+    call Timer0.startOneShot(1500);
   }
 
   event void AMControl.startDone(error_t err) {
@@ -127,64 +103,134 @@ implementation {
   event void AMControl.stopDone(error_t err) {
   }
 
-  event void Timer0.fired() {
-    counter++;
-    if (!busy) {
-      BlinkToRadioMsg* btrpkt = 
-	(BlinkToRadioMsg*)(call Packet.getPayload(&pkt, sizeof(BlinkToRadioMsg)));
-      if (btrpkt == NULL) {
-	return;
-      }
-      btrpkt->nodeid = TOS_NODE_ID;
-      btrpkt->counter = counter;
-      if (call AMSend.send(AM_BROADCAST_ADDR, 
-          &pkt, sizeof(BlinkToRadioMsg)) == SUCCESS) {
-        busy = TRUE;
-      }
-    }
-  }
-
   event void AMSend.sendDone(message_t* msg, error_t err) {
     if (&pkt == msg) {
       busy = FALSE;
     }
   }
 
+  event void Timer0.fired() {
+    switch(counter) {
+      case 0:
+        call Car.Forward(800);
+        break;
+      case 1:
+        call Car.Backward(800);
+        break;
+      case 2:
+        call Car.Left(800);
+        break;
+      case 3:
+        call Car.Right(800);
+        break;
+      case 4:
+        call Car.Pause();
+        break;
+      case 5:
+        call Car.Angle(2400);
+        break;
+      case 6:
+        call Car.Angle(4400);
+        break;
+      case 7:
+        call Car.Angle_Senc(2400);
+        break;
+      case 8:
+        call Car.Angle_Senc(4400);
+        break;
+      case 9:
+        call Car.Angle_Third(2400);
+        break;
+      case 10:
+        call Car.Angle_Third(4400);
+        break;
+      case 11:
+        call Car.Home();
+        break;
+    }
+    call Car.read();
+    counter++;
+    if (counter < 12) {
+      call Timer0.startOneShot(2000);
+    }
+  }
+
   event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len){
-    if (len != sizeof(BlinkToRadioMsg)) {
-      return NULL;
+    if (len == sizeof(BlinkToRadioMsg)) {
+      BlinkToRadioMsg* btrpkt = (BlinkToRadioMsg*)payload;
+      switch (btrpkt->type) {
+        case 0x01:
+          call Car.Angle(btrpkt->value);
+          call Car.read();
+          break;
+        case 0x02:
+          call Car.Forward(btrpkt->value);
+          call Car.read();
+          break;
+        case 0x03:
+          call Car.Backward(btrpkt->value);
+          call Car.read();
+          break;
+        case 0x04:
+          call Car.Left(btrpkt->value);
+          call Car.read();
+          break;
+        case 0x05:
+          call Car.Right(btrpkt->value);
+          call Car.read();
+          break;
+        case 0x06:
+          call Car.Pause();
+          call Car.read();
+          break;
+        case 0x07:
+          call Car.Angle_Senc(btrpkt->value);
+          call Car.read();
+          break;
+        case 0x08:
+          call Car.Angle_Third(btrpkt->value);
+          call Car.read();
+          break;
+        case 0x10:
+          call Car.Home();
+          call Car.read();
+          break;
+      }
     }
-
-    BlinkToRadioMsg* recvPayload = (BlinkToRadioMsg *)payload;
-    BlinkToRadioMsg* sendPayload = (BlinkToRadioMsg *)(call Packet.getPayload(&pkt, sizeof(BlinkToRadioMsg)));
-    if (sendPayload == NULL){
-      call Leds.led0On();
-      return NULL;
-    }
-
-    temp.type = recvPayload->type;
-    temp.data = recvPayload->data;
-    setLeds(temp.type);
-
-    switch(temp.type){
-      case 1: call Car.Angle(temp.data); break;
-      case 2: call Car.Forward(temp.data); break;
-      case 3: call Car.Back(temp.data); break;
-      case 4: call Car.Left(temp.data); break;
-      case 5: call Car.Right(temp.data); break;
-      case 6: call Car.Pause(); break;
-      case 7: call Car.Angle_Senc(temp.data); break;
-      case 8: call Car.Angle_Third(temp.data); break;
-      case 9: call Car.Angle_Init(); break;
-      default: resetLeds();
-    }
-
-    memcpy(sendPayload, recvPayload ,sizeof(BlinkToRadioMsg));
-
-    if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(BlinkToRadioMsg)) == SUCCESS) {
-      busy = TRUE;
-    }
-    
     return msg;
+  }
+
+  event void Car.readDone(error_t error, uint8_t data) {
+    if (error == SUCCESS) {
+      switch(data) {
+        case 0x02:
+          call Leds.set(2);
+          break;
+        case 0x03:
+          call Leds.set(6);
+          break;
+        case 0x04:
+          call Leds.set(4);
+          break;
+        case 0x05:
+          call Leds.set(1);
+          break;
+        case 0x06:
+          call Leds.set(0);
+          break;
+        case 0x01:
+          call Leds.set(3);
+          break;
+        case 0x07:
+          call Leds.set(5);
+          break;
+        case 0x08:
+          call Leds.set(7);
+          break;
+        default:
+          call Leds.set(0);
+          break;
+      }
+    }
   }
 }

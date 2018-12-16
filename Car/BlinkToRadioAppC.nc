@@ -67,10 +67,10 @@ implementation {
   App.Boot -> MainC;
   App.Leds -> LedsC;
   App.Timer0 -> Timer0;
-  App.Packet -> AMSenderC;
-  App.AMPacket -> AMSenderC;
+  App.Packet -> ActiveMessageC;
+  App.AMPacket -> ActiveMessageC.AMPacket;
   App.AMControl -> ActiveMessageC;
-  App.AMSend -> AMSenderC;
-  App.Receive -> AMReceiverC;
-  App.Car -> CarC;
+  App.AMSend -> ActiveMessageC.AMSend[AM_CONTROLLER];
+  App.Receive -> ActiveMessageC.Receive[AM_CONTROLLER];
+  
 }
