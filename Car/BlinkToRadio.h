@@ -4,13 +4,18 @@
 #define BLINKTORADIO_H
 
 enum {
-  AM_BLINKTORADIO = 6,
-  TIMER_PERIOD_MILLI = 250
+  AM_CONTROLLER = 88,
+  THRESHOLD = 1600,
+  XMIN = THRESHOLD,
+  XMAX = 4095 - THRESHOLD,
+  YMIN = THRESHOLD,
+  YMAX = 4095 - THRESHOLD,
+  INTERVAL = 100
 };
 
 typedef nx_struct BlinkToRadioMsg {
-  nx_uint16_t nodeid;
-  nx_uint16_t counter;
+  nx_uint8_t type;
+  nx_uint16_t value;
 } BlinkToRadioMsg;
 
 #endif
