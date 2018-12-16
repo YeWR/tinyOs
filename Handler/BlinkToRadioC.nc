@@ -48,6 +48,7 @@
  * @date   Feb 1, 2006
  */
 #include <Timer.h>
+#include <Msp430Adc12.h>
 #include "BlinkToRadio.h"
 
 module BlinkToRadioC {
@@ -55,40 +56,25 @@ module BlinkToRadioC {
   uses interface Leds;
   uses interface Timer<TMilli> as Timer0;
   uses interface Packet;
-  uses interface AMPacket;
   uses interface AMSend;
   uses interface Receive;
   uses interface SplitControl as AMControl;
   uses interface Read<uint16_t> as ReadX;
   uses interface Read<uint16_t> as ReadY;
+  uses interface Button;
+  uses interface AMSend as SerialAMSend;
+  uses interface SplitControl as SerialControl;
 }
 implementation {
-  const msp430adc12_channel_config_t config1 = {
-        inch: INPUT_CHANNEL_A6,
-        sref: REFERENCE_VREFplus_AVss,
-        ref2_5v: REFVOLT_LEVEL_2_5,
-        adc12ssel: SHT_SOURCE_ACLK,
-        adc12div: SHT_CLOCK_DIV_1,
-        sht: SAMPLE_HOLD_4_CYCLES,
-        sampcon_ssel: SAMPCON_SOURCE_SMCLK,
-        sampcon_id: SAMPCON_CLOCK_DIV_1
-    };
-
-    const msp430adc12_channel_config_t config2 = {
-        inch: INPUT_CHANNEL_A7,
-        sref: REFERENCE_VREFplus_AVss,
-        ref2_5v: REFVOLT_LEVEL_2_5,
-        adc12ssel: SHT_SOURCE_ACLK,
-        adc12div: SHT_CLOCK_DIV_1,
-        sht: SAMPLE_HOLD_4_CYCLES,
-        sampcon_ssel: SAMPCON_SOURCE_SMCLK,
-        sampcon_id: SAMPCON_CLOCK_DIV_1
-    };
-  uint16_t counter;
-  message_t pkt;
+  bool m_button[6] = {FALSE,FALSE,FALSE,FALSE,FALSE,FALSE};
+  int counter = 0;
+  uint8_t instruct = 0x00;
+  uint16_t joystickX;
+  uint16_t joystickY;
   bool busy = FALSE;
-
-  void setLeds(uint16_t val) {
+  message_t pkt;
+  
+  void setLeds(uint8_t val) {
     if (val & 0x01)
       call Leds.led0On();
     else 
@@ -102,9 +88,44 @@ implementation {
     else
       call Leds.led2Off();
   }
-
+  
+  void ledShow(){
+      setLeds(instruct);
+  }
+  
+  void getInputs(){
+      call ReadX.read();
+      call ReadY.read();
+      call Button.pinvalueA();
+      call Button.pinvalueB();
+      call Button.pinvalueC();
+      call Button.pinvalueD();
+      call Button.pinvalueE();
+      call Button.pinvalueF();
+  }
+  
+  void sendInstruct(){
+      BlinkToRadioMsg* nodeMsg = (BlinkToRadioMsg*)(call Packet.getPayload(&pkt, sizeof(BlinkToRadioMsg)));
+      ButtonMsg* buttonMsg;
+      bool flag = FALSE;
+      // to do
+  }
+  
+  void addInstruct(){
+      counter ++;
+      if(counter >= 8){
+          counter = 0;
+          sendInstruct();
+      }
+  }
+  
   event void Boot.booted() {
     call AMControl.start();
+    call SerialControl.start();
+    call Button.start();
+    call Leds.led0On();
+    call Leds.led1On();
+    call Leds.led2On();
   }
 
   event void AMControl.startDone(error_t err) {
@@ -118,22 +139,18 @@ implementation {
 
   event void AMControl.stopDone(error_t err) {
   }
+  
+  event void SerialControl.startDone(error_t err) {
+  }
 
+  event void SerialControl.stopDone(error_t err) {
+  }
+  
+  event void SerialAMSend.sendDone(message_t* msg, error_t err) {
+  }
+  
   event void Timer0.fired() {
-    counter++;
-    if (!busy) {
-      BlinkToRadioMsg* btrpkt = 
-	(BlinkToRadioMsg*)(call Packet.getPayload(&pkt, sizeof(BlinkToRadioMsg)));
-      if (btrpkt == NULL) {
-	return;
-      }
-      btrpkt->nodeid = TOS_NODE_ID;
-      btrpkt->counter = counter;
-      if (call AMSend.send(AM_BROADCAST_ADDR, 
-          &pkt, sizeof(BlinkToRadioMsg)) == SUCCESS) {
-        busy = TRUE;
-      }
-    }
+    getInputs();
   }
 
   event void AMSend.sendDone(message_t* msg, error_t err) {
@@ -141,13 +158,84 @@ implementation {
       busy = FALSE;
     }
   }
-
+  
+  
   event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len){
     if (len == sizeof(BlinkToRadioMsg)) {
       BlinkToRadioMsg* btrpkt = (BlinkToRadioMsg*)payload;
-      setLeds(btrpkt->counter);
     }
     return msg;
   }
   
+  event ReadX.readDone(error_t error, uint16_t val){
+      if(error==SUCCESS){
+          joystickX = val;
+          addInstruct();
+      }
+  }
+  
+  event ReadY.readDone(error_t error, uint16_t val){
+      if(error==SUCCESS){
+          joystickY = val;
+          addInstruct();
+      }
+  }
+  
+  event void Button.pinvalueADone(error_t error, bool val){
+      if(error == SUCCESS){
+          m_button[0] = val;
+          addInstruct();
+      }
+  }
+  event void Button.pinvalueBDone(error_t error, bool val){
+      if(error == SUCCESS){
+          m_button[1] = val;
+          addInstruct();
+      }
+  }
+  event void Button.pinvalueCDone(error_t error, bool val){
+      if(error == SUCCESS){
+          m_button[2] = val;
+          addInstruct();
+      }
+  }
+  event void Button.pinvalueCDone(error_t error, bool val){
+      if(error == SUCCESS){
+          m_button[3] = val;
+          addInstruct();
+      }
+  }
+  event void Button.pinvalueEDone(error_t error, bool val){
+      if(error == SUCCESS){
+          m_button[4] = val;
+          addInstruct();
+      }
+  }
+  event void Button.pinvalueFDone(error_t error, bool val){
+      if(error == SUCCESS){
+          m_button[5] = val;
+          addInstruct();
+      }
+  }
+  
+  event void Button.startDone(error_t error, bool val){
+  }
+  event void Button.stopDone(error_t error, bool val){
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -13,4 +13,13 @@ typedef nx_struct BlinkToRadioMsg {
   nx_uint16_t counter;
 } BlinkToRadioMsg;
 
+typedef nx_struct ButtonMsg{
+    nx_uint8_t buttonA;
+    nx_uint8_t buttonB;
+    nx_uint8_t buttonC;
+    nx_uint8_t buttonD;
+    nx_uint8_t buttonE;
+    nx_uint8_t buttonF;
+}ButtonMsg;
+
 #endif
