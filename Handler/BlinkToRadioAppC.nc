@@ -60,7 +60,8 @@ implementation {
   components ActiveMessageC;
   components new AMSenderC(AM_BLINKTORADIO);
   components new AMReceiverC(AM_BLINKTORADIO);
-  
+  components ButtonC;
+  components JoyStickC;
 
   App.Boot -> MainC;
   App.Leds -> LedsC;
@@ -70,4 +71,7 @@ implementation {
   App.AMControl -> ActiveMessageC;
   App.AMSend -> AMSenderC;
   App.Receive -> AMReceiverC;
+  App.Button->ButtonC;
+  App.ReadX->JoyStickC.ReadX;
+  App.ReadY->JoyStickC.ReadY;
 }

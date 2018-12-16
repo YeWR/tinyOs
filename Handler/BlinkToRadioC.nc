@@ -59,6 +59,8 @@ module BlinkToRadioC {
   uses interface AMSend;
   uses interface Receive;
   uses interface SplitControl as AMControl;
+  uses interface Read<uint16_t> as ReadX;
+  uses interface Read<uint16_t> as ReadY;
 }
 implementation {
   const msp430adc12_channel_config_t config1 = {
@@ -147,4 +149,5 @@ implementation {
     }
     return msg;
   }
+  
 }
