@@ -56,14 +56,13 @@ module BlinkToRadioC {
   uses interface Leds;
   uses interface Timer<TMilli> as Timer0;
   uses interface Packet;
+  uses interface AMPacket;
   uses interface AMSend;
   uses interface Receive;
   uses interface SplitControl as AMControl;
   uses interface Read<uint16_t> as ReadX;
   uses interface Read<uint16_t> as ReadY;
   uses interface Button;
-  uses interface AMSend as SerialAMSend;
-  uses interface SplitControl as SerialControl;
 }
 implementation {
   bool buttons[6] = {TRUE,TRUE,TRUE,TRUE,TRUE,TRUE};
@@ -75,7 +74,6 @@ implementation {
   uint16_t joystickY;
   bool busy = FALSE;
   message_t pkt;
-  message_t pkt2;
   
   void setLeds(uint8_t val) {
     if (val & 0x01)
@@ -109,7 +107,6 @@ implementation {
   
   void sendInstruct(){
       BlinkToRadioMsg* sndPayload;
-      ButtonMsg* buttonMsg;
       bool flag = FALSE;
     sndPayload = (BlinkToRadioMsg*)(call Packet.getPayload(&pkt, sizeof(BlinkToRadioMsg)));
 
@@ -138,8 +135,8 @@ implementation {
         else if (buttons[4] == FALSE ){ //duoji2 bigger
           led = 0x05;
           instruct = 0x08;
-          sndPayload->type = 0x08;
-          sndPayload->value = 1;
+          sndPayload->type = 0x07;
+          sndPayload->value = 0;
           flag = TRUE;
         }
         else if ( buttons[5] == FALSE ){ //reset
@@ -167,13 +164,13 @@ implementation {
       else if (joystickX > 3500 ){  //左转
         led = 0x03;
         instruct = 0x04;
-        sndPayload->type = 0x04;
+        sndPayload->type = 0x05;
         sndPayload->value = MOVE_SPEED;
       }
       else if (joystickX < 500 ){  //右转
         led = 0x04;
         instruct = 0x05;
-        sndPayload->type = 0x05;
+        sndPayload->type = 0x04;
         sndPayload->value = MOVE_SPEED;
       }
       else {  //停止
@@ -184,16 +181,6 @@ implementation {
       }
     }
 
-    //Serial Output
-    buttonMsg = (ButtonMsg*)(call Packet.getPayload(&pkt2, sizeof(ButtonMsg)));
-    buttonMsg->buttonA = buttons[0];
-    buttonMsg->buttonB = buttons[1];
-    buttonMsg->buttonC = buttons[2];
-    buttonMsg->buttonD = buttons[3];
-    buttonMsg->buttonE = buttons[4];
-    buttonMsg->buttonF = buttons[5];
-    if (call SerialAMSend.send(AM_BROADCAST_ADDR, &pkt2, sizeof(ButtonMsg)) == SUCCESS){
-    }
     buttons[0]=buttons[1]=buttons[2]=buttons[3]=buttons[4]=buttons[5]=TRUE;
     if (!busy) {
       if (sndPayload == NULL) {
@@ -203,6 +190,10 @@ implementation {
       ledShow();
       if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(BlinkToRadioMsg)) == SUCCESS) {
         busy = TRUE;
+      }
+      else
+      {
+        setLeds(7);
       }
     }
   }
@@ -217,7 +208,6 @@ implementation {
   
   event void Boot.booted() {
     call AMControl.start();
-    call SerialControl.start();
     call Button.start();
     call Leds.led0On();
     call Leds.led1On();
@@ -236,14 +226,6 @@ implementation {
   event void AMControl.stopDone(error_t err) {
   }
   
-  event void SerialControl.startDone(error_t err) {
-  }
-
-  event void SerialControl.stopDone(error_t err) {
-  }
-  
-  event void SerialAMSend.sendDone(message_t* msg, error_t err) {
-  }
   
   event void Timer0.fired() {
     getInputs();
@@ -253,6 +235,7 @@ implementation {
     if (&pkt == msg) {
       busy = FALSE;
     }
+    
   }
   
   

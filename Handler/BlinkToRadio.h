@@ -4,22 +4,13 @@
 #define BLINKTORADIO_H
 
 enum {
-  AM_BLINKTORADIO = 6,
+  AM_BLINKTORADIO = 88,
   TIMER_PERIOD_MILLI = 250
 };
 
 typedef nx_struct BlinkToRadioMsg {
-  nx_uint16_t type;
+  nx_uint8_t type;
   nx_uint16_t value;
 } BlinkToRadioMsg;
-
-typedef nx_struct ButtonMsg{
-    nx_uint8_t buttonA;
-    nx_uint8_t buttonB;
-    nx_uint8_t buttonC;
-    nx_uint8_t buttonD;
-    nx_uint8_t buttonE;
-    nx_uint8_t buttonF;
-}ButtonMsg;
 
 #endif
