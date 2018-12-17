@@ -33,20 +33,6 @@
  *
  */
 
-/**
- * Implementation of the BlinkToRadio application.  A counter is
- * incremented and a radio message is sent whenever a timer fires.
- * Whenever a radio message is received, the three least significant
- * bits of the counter in the message payload are displayed on the
- * LEDs.  Program two motes with this application.  As long as they
- * are both within range of each other, the LEDs on both will keep
- * changing.  If the LEDs on one (or both) of the nodes stops changing
- * and hold steady, then that node is no longer receiving any messages
- * from the other node.
- *
- * @author Prabal Dutta
- * @date   Feb 1, 2006
- */
 #include <Timer.h>
 #include <Msp430Adc12.h>
 #include "BlinkToRadio.h"
@@ -65,13 +51,12 @@ module BlinkToRadioC {
   uses interface Button;
 }
 implementation {
-  bool buttons[6] = {TRUE,TRUE,TRUE,TRUE,TRUE,TRUE};
+  bool status[6] = {TRUE,TRUE,TRUE,TRUE,TRUE,TRUE};
   int counter = 0;
   uint16_t MOVE_SPEED = 500;
-  uint8_t instruct = 0x00;
   uint8_t led = 0x00;
-  uint16_t joystickX;
-  uint16_t joystickY;
+  uint16_t posX;
+  uint16_t posY;
   bool busy = FALSE;
   message_t pkt;
   
@@ -90,110 +75,92 @@ implementation {
       call Leds.led2Off();
   }
   
-  void ledShow(){
-      setLeds(led);
-  }
   
   void getInputs(){
       call ReadX.read();
       call ReadY.read();
-      call Button.pinvalueA();
-      call Button.pinvalueB();
-      call Button.pinvalueC();
-      call Button.pinvalueD();
-      call Button.pinvalueE();
-      call Button.pinvalueF();
+      call Button.readA();
+      call Button.readB();
+      call Button.readC();
+      call Button.readD();
+      call Button.readE();
+      call Button.readF();
   }
   
   void sendInstruct(){
-      BlinkToRadioMsg* sndPayload;
-      bool flag = FALSE;
+    BlinkToRadioMsg* sndPayload;
+    bool flag = FALSE;
     sndPayload = (BlinkToRadioMsg*)(call Packet.getPayload(&pkt, sizeof(BlinkToRadioMsg)));
 
     //检验按钮
-        if (buttons[0] == FALSE){ //舵机1 smaller
-          led = 0x01;
-          instruct = 0x01;
-          sndPayload->type = 0x01;
-          sndPayload->value = 0;
-          flag = TRUE;
-        }
-        else if (buttons[1] == FALSE){ //舵机1 bigger
-          led = 0x02;
-          instruct = 0x01;
-          sndPayload->type = 0x01;
-          sndPayload->value = 1;
-          flag = TRUE;
-        }
-        else if (buttons[2] == FALSE){ //舵机2 smaller
-          led = 0x03;
-          instruct = 0x07;
-          sndPayload->type = 0x07;
-          sndPayload->value = 1;
-          flag = TRUE;
-        }
-        else if (buttons[4] == FALSE ){ //duoji2 bigger
-          led = 0x05;
-          instruct = 0x08;
-          sndPayload->type = 0x07;
-          sndPayload->value = 0;
-          flag = TRUE;
-        }
-        else if ( buttons[5] == FALSE ){ //reset
-          led = 0x06;
-          instruct = 0x10;
-          sndPayload->type = 0x10;
-          sndPayload->value = 0;
-          flag = TRUE;
-        }
+    if (status[0] == FALSE){
+      led = 0x01;
+      sndPayload->type = 0x01;
+      sndPayload->value = 0;
+      flag = TRUE;
+    }
+    else if (status[1] == FALSE){
+      led = 0x02;
+      sndPayload->type = 0x01;
+      sndPayload->value = 1;
+      flag = TRUE;
+    }
+    else if (status[2] == FALSE){
+      led = 0x03;
+      sndPayload->type = 0x07;
+      sndPayload->value = 1;
+      flag = TRUE;
+    }
+    else if (status[4] == FALSE ){
+      led = 0x05;
+      sndPayload->type = 0x07;
+      sndPayload->value = 0;
+      flag = TRUE;
+    }
+    else if ( status[5] == FALSE ){
+      led = 0x06;
+      sndPayload->type = 0x10;
+      sndPayload->value = 0;
+      flag = TRUE;
+    }
 
     //检验摇杆
     if (flag == FALSE) {
-      if ( joystickY < 500 ){ //前进
+      if ( posY < 500 ){ //前进
         led = 0x01;
-        instruct = 0x02;
         sndPayload->type = 0x02;
         sndPayload->value = MOVE_SPEED;
       }
-      else if ( joystickY > 3500 ){  //后退
+      else if ( posY > 3500 ){  //后退
         led = 0x02;
-        instruct = 0x03;
         sndPayload->type = 0x03;
         sndPayload->value = MOVE_SPEED;
       }      
-      else if (joystickX > 3500 ){  //左转
+      else if (posX > 3500 ){  //左转
         led = 0x03;
-        instruct = 0x04;
         sndPayload->type = 0x05;
         sndPayload->value = MOVE_SPEED;
       }
-      else if (joystickX < 500 ){  //右转
+      else if (posX < 500 ){  //右转
         led = 0x04;
-        instruct = 0x05;
         sndPayload->type = 0x04;
         sndPayload->value = MOVE_SPEED;
       }
       else {  //停止
         led = 0x05;
-        instruct = 0x06;  
         sndPayload->type = 0x06;
         sndPayload->value = 0;
       }
     }
 
-    buttons[0]=buttons[1]=buttons[2]=buttons[3]=buttons[4]=buttons[5]=TRUE;
+    status[0]=status[1]=status[2]=status[3]=status[4]=status[5]=TRUE;
     if (!busy) {
       if (sndPayload == NULL) {
         return;
       }
-    
-      ledShow();
+      setLeds(led);
       if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(BlinkToRadioMsg)) == SUCCESS) {
         busy = TRUE;
-      }
-      else
-      {
-        setLeds(7);
       }
     }
   }
@@ -223,8 +190,7 @@ implementation {
     }
   }
 
-  event void AMControl.stopDone(error_t err) {
-  }
+  event void AMControl.stopDone(error_t err) {}
   
   
   event void Timer0.fired() {
@@ -235,7 +201,6 @@ implementation {
     if (&pkt == msg) {
       busy = FALSE;
     }
-    
   }
   
   
@@ -248,57 +213,55 @@ implementation {
   
   event void ReadX.readDone(error_t error, uint16_t val){
       if(error==SUCCESS){
-          joystickX = val;
+          posX = val;
           addInstruct();
       }
   }
   
   event void ReadY.readDone(error_t error, uint16_t val){
       if(error==SUCCESS){
-          joystickY = val;
+          posY = val;
           addInstruct();
       }
   }
   
-  event void Button.startDone(error_t error){
-  }
+  event void Button.startDone(error_t err){}
   
-  event void Button.stopDone(error_t error){
-  }
+  event void Button.stopDone(error_t err){}
   
-  event void Button.pinvalueADone(error_t error, bool val){
-      if(error == SUCCESS){
-          buttons[0] = val;
+  event void Button.readADone(error_t err, bool val){
+      if(err == SUCCESS){
+          status[0] = val;
           addInstruct();
       }
   }
-  event void Button.pinvalueBDone(error_t error, bool val){
-      if(error == SUCCESS){
-          buttons[1] = val;
+  event void Button.readBDone(error_t err, bool val){
+      if(err == SUCCESS){
+          status[1] = val;
           addInstruct();
       }
   }
-  event void Button.pinvalueCDone(error_t error, bool val){
-      if(error == SUCCESS){
-          buttons[2] = val;
+  event void Button.readCDone(error_t err, bool val){
+      if(err == SUCCESS){
+          status[2] = val;
           addInstruct();
       }
   }
-  event void Button.pinvalueDDone(error_t error, bool val){
-      if(error == SUCCESS){
-          buttons[3] = val;
+  event void Button.readDDone(error_t err, bool val){
+      if(err == SUCCESS){
+          status[3] = val;
           addInstruct();
       }
   }
-  event void Button.pinvalueEDone(error_t error, bool val){
-      if(error == SUCCESS){
-          buttons[4] = val;
+  event void Button.readEDone(error_t err, bool val){
+      if(err == SUCCESS){
+          status[4] = val;
           addInstruct();
       }
   }
-  event void Button.pinvalueFDone(error_t error, bool val){
-      if(error == SUCCESS){
-          buttons[5] = val;
+  event void Button.readFDone(error_t err, bool val){
+      if(err == SUCCESS){
+          status[5] = val;
           addInstruct();
       }
   }

@@ -2,20 +2,20 @@
 interface Button {
   command void start();
   command void stop();
-  event void startDone(error_t error);
-  event void stopDone(error_t error);
+  event void startDone(error_t err);
+  event void stopDone(error_t err);
 
-  command void pinvalueA();
-  command void pinvalueB();
-  command void pinvalueC();
-  command void pinvalueD();
-  command void pinvalueE();
-  command void pinvalueF();
+  command void readA();
+  command void readB();
+  command void readC();
+  command void readD();
+  command void readE();
+  command void readF();
 
-  event void pinvalueADone(error_t error, bool val);
-  event void pinvalueBDone(error_t error, bool val);
-  event void pinvalueCDone(error_t error, bool val);
-  event void pinvalueDDone(error_t error, bool val);
-  event void pinvalueEDone(error_t error, bool val);
-  event void pinvalueFDone(error_t error, bool val);
+  event void readADone(error_t err, bool val);
+  event void readBDone(error_t err, bool val);
+  event void readCDone(error_t err, bool val);
+  event void readDDone(error_t err, bool val);
+  event void readEDone(error_t err, bool val);
+  event void readFDone(error_t err, bool val);
 }

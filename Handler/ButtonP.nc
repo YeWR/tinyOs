@@ -19,7 +19,7 @@ implementation {
     bool F_isPressed;
 
     command void Button.start(){
-        error_t error = SUCCESS;
+        error_t err = SUCCESS;
         call A_button.clr();
         call B_button.clr();
         call C_button.clr();
@@ -34,48 +34,48 @@ implementation {
         call E_button.makeInput();
         call F_button.makeInput();
         
-        signal Button.startDone(error);
+        signal Button.startDone(err);
     }
     
     command void Button.stop(){
-        error_t error = SUCCESS;
-        signal Button.startDone(error);
+        error_t err = SUCCESS;
+        signal Button.startDone(err);
     }
     
-    command void Button.pinvalueA(){
-        error_t error = SUCCESS;
+    command void Button.readA(){
+        error_t err = SUCCESS;
         A_isPressed = call A_button.get();
-        signal Button.pinvalueADone(error, A_isPressed);
+        signal Button.readADone(err, A_isPressed);
     }
 
-    command void Button.pinvalueB(){
-        error_t error = SUCCESS;
+    command void Button.readB(){
+        error_t err = SUCCESS;
         B_isPressed = call B_button.get();
-        signal Button.pinvalueBDone(error, B_isPressed);
+        signal Button.readBDone(err, B_isPressed);
     }
     
-    command void Button.pinvalueC(){
-        error_t error = SUCCESS;
+    command void Button.readC(){
+        error_t err = SUCCESS;
         C_isPressed = call C_button.get();
-        signal Button.pinvalueCDone(error, C_isPressed);
+        signal Button.readCDone(err, C_isPressed);
     }
 
-    command void Button.pinvalueD(){
-        error_t error = SUCCESS;
+    command void Button.readD(){
+        error_t err = SUCCESS;
         D_isPressed = call D_button.get();
-        signal Button.pinvalueDDone(error, D_isPressed);
+        signal Button.readDDone(err, D_isPressed);
     }
 
-    command void Button.pinvalueE(){
-        error_t error = SUCCESS;
+    command void Button.readE(){
+        error_t err = SUCCESS;
         E_isPressed = call E_button.get();
-        signal Button.pinvalueEDone(error, E_isPressed);
+        signal Button.readEDone(err, E_isPressed);
     }
     
-    command void Button.pinvalueF(){
-        error_t error = SUCCESS;
+    command void Button.readF(){
+        error_t err = SUCCESS;
         F_isPressed = call F_button.get();
-        signal Button.pinvalueFDone(error, F_isPressed);
+        signal Button.readFDone(err, F_isPressed);
     }
     
 }
