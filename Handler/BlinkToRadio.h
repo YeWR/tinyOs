@@ -9,8 +9,8 @@ enum {
 };
 
 typedef nx_struct BlinkToRadioMsg {
-  nx_uint16_t nodeid;
-  nx_uint16_t counter;
+  nx_uint16_t type;
+  nx_uint16_t data;
 } BlinkToRadioMsg;
 
 typedef nx_struct ButtonMsg{

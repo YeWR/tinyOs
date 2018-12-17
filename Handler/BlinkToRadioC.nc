@@ -68,11 +68,13 @@ module BlinkToRadioC {
 implementation {
   bool m_button[6] = {FALSE,FALSE,FALSE,FALSE,FALSE,FALSE};
   int counter = 0;
+  uint16_t MOVE_SPEED = 500;
   uint8_t instruct = 0x00;
   uint16_t joystickX;
   uint16_t joystickY;
   bool busy = FALSE;
   message_t pkt;
+  message_t pkt2;
   
   void setLeds(uint8_t val) {
     if (val & 0x01)
@@ -105,10 +107,102 @@ implementation {
   }
   
   void sendInstruct(){
-      BlinkToRadioMsg* nodeMsg = (BlinkToRadioMsg*)(call Packet.getPayload(&pkt, sizeof(BlinkToRadioMsg)));
+      BlinkToRadioMsg* sndPayload;
       ButtonMsg* buttonMsg;
       bool flag = FALSE;
-      // to do
+    sndPayload = (BlinkToRadioMsg*)(call Packet.getPayload(&pkt, sizeof(BlinkToRadioMsg)));
+
+    //检验按钮
+    for (i=0;i<6;i++) {
+      if (buttons[i] == FALSE) {
+        if (i == 0){ //舵机1 smaller
+          instruct = 0x01;
+          sndPayload->type = 0x01;
+          sndPayload->data = 0;
+          flag = TRUE;
+          break;
+        }
+        else if ( i==1 ){ //舵机1 bigger
+          instruct = 0x01;
+          sndPayload->type = 0x01;
+          sndPayload->data = 1;
+          flag = TRUE;
+          break;
+        }
+        else if ( i==2 ){ //舵机2 smaller
+          instruct = 0x07;
+          sndPayload->type = 0x07;
+          sndPayload->data = 0;
+          flag = TRUE;
+          break;
+        }
+        else if ( i==4 ){ //duoji2 bigger
+          instruct = 0x07;
+          sndPayload->type = 0x07;
+          sndPayload->data = 1;
+          flag = TRUE;
+          break;
+        }
+        else if ( i==5 ){ //reset
+          instruct = 0x10;
+          sndPayload->type = 0x09;
+          sndPayload->data = 0;
+          flag = TRUE;
+          break;
+        }
+      }
+    }
+
+    //检验摇杆
+    if (flag == FALSE) {
+      if ( joystick_y < 500 ){ //前进
+        instruct = 0x02;
+        sndPayload->type = 0x02;
+        sndPayload->data = MOVE_SPEED;
+      }
+      else if ( joystick_y > 3500 ){  //后退
+        instruct = 0x03;
+        sndPayload->type = 0x03;
+        sndPayload->data = MOVE_SPEED;
+      }      
+      else if (joystick_x > 3500 ){  //左转
+        instruct = 0x04;
+        sndPayload->type = 0x04;
+        sndPayload->data = MOVE_SPEED;
+      }
+      else if (joystick_x < 500 ){  //右转
+        instruct = 0x05;
+        sndPayload->type = 0x05;
+        sndPayload->data = MOVE_SPEED;
+      }
+      else {  //停止
+        instruct = 0x06;  
+        sndPayload->type = 0x06;
+        sndPayload->data = 0;
+      }
+    }
+
+    //Serial Output
+    buttonMsg = (ButtonMsg*)(call Packet.getPayload(&pkt2, sizeof(ButtonMsg)));
+    buttonMsg->buttonA = buttons[0];
+    buttonMsg->buttonB = buttons[1];
+    buttonMsg->buttonC = buttons[2];
+    buttonMsg->buttonD = buttons[3];
+    buttonMsg->buttonE = buttons[4];
+    buttonMsg->buttonF = buttons[5];
+    if (call SerialAMSend.send(AM_BROADCAST_ADDR, &pkt2, sizeof(ButtonMsg)) == SUCCESS){
+    }
+
+    if (!busy) {
+      if (sndPayload == NULL) {
+        return;
+      }
+
+      ledShowInstruct();
+      if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(BlinkToRadioMsg)) == SUCCESS) {
+        busy = TRUE;
+      }
+    }
   }
   
   void addInstruct(){
@@ -181,6 +275,12 @@ implementation {
       }
   }
   
+  event void Button.startDone(error_t error, bool val){
+  }
+  
+  event void Button.stopDone(error_t error, bool val){
+  }
+  
   event void Button.pinvalueADone(error_t error, bool val){
       if(error == SUCCESS){
           m_button[0] = val;
@@ -216,11 +316,6 @@ implementation {
           m_button[5] = val;
           addInstruct();
       }
-  }
-  
-  event void Button.startDone(error_t error, bool val){
-  }
-  event void Button.stopDone(error_t error, bool val){
   }
 }
 
