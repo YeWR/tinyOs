@@ -10,9 +10,7 @@ enum {
   XMAX = 4095 - THRESHOLD,
   YMIN = THRESHOLD,
   YMAX = 4095 - THRESHOLD,
-  INTERVAL = 100,
-  TIMER_PERIOD_MILLI = 250,
-  AM_BLINKTORADIOMSG = 6
+  INTERVAL = 100
 };
 
 typedef nx_struct BlinkToRadioMsg {

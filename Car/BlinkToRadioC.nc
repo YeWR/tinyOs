@@ -79,10 +79,7 @@ implementation {
   message_t pkt;
   bool busy = FALSE;
 
-  void setLeds(uint16_t val) {
-    if (val > 7){
-      val %= 8;
-    }
+  async void setLeds(uint16_t val) {
     if (val & 0x01)
       call Leds.led0On();
     else 
