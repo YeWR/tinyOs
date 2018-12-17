@@ -49,7 +49,6 @@
  */
 #include <Timer.h>
 #include <Msp430Adc12.h> 
-#include <printf.h>
 #include "BlinkToRadio.h"
 
 module BlinkToRadioC {
