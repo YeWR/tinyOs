@@ -8,10 +8,10 @@ implementation{
 
     Button = ButtonP.Button;
 
-    Button.A_button = IOC.Port60;
-    Button.B_button = IOC.Port21;
-    Button.C_button = IOC.Port61;
-    Button.D_button = IOC.Port23;
-    Button.E_button = IOC.Port62;
-    Button.F_button = IOC.Port26;
+    ButtonP.A_button -> IOC.Port60;
+    ButtonP.B_button -> IOC.Port21;
+    ButtonP.C_button -> IOC.Port61;
+    ButtonP.D_button -> IOC.Port23;
+    ButtonP.E_button -> IOC.Port62;
+    ButtonP.F_button -> IOC.Port26;
 }
