@@ -79,7 +79,7 @@ implementation {
   message_t pkt;
   bool busy = FALSE;
 
-  async void setLeds(uint16_t val) {
+  void setLeds(uint16_t val) {
     if (val & 0x01)
       call Leds.led0On();
     else 
@@ -102,10 +102,7 @@ implementation {
   }
 
   event void AMControl.startDone(error_t err) {
-    if (err == SUCCESS) {
-      call Timer0.startPeriodic(TIMER_PERIOD_MILLI);
-    }
-    else {
+    if (err != SUCCESS) {
       call AMControl.start();
     }
   }

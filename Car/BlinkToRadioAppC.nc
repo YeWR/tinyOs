@@ -55,22 +55,20 @@ configuration BlinkToRadioAppC {
 implementation {
   components MainC;
   components LedsC;
-  components ActiveMessageC;
-  components BlinkToRadioC as App;
+  components BlinkToRadioC;
+  components ActiveMessageC as AM;
   components new TimerMilliC() as Timer0;
-  components new AMReceiverC(AM_BLINKTORADIOMSG) as Receiver;
   components CarC;
-  components SerialStartC;
-  
 
-  App.Boot -> MainC;
-  App.Leds -> LedsC;
-  App.Car -> CarC;
-  App.Timer0 -> Timer0;
-  App.Packet -> ActiveMessageC;
-  App.AMPacket -> ActiveMessageC.AMPacket;
-  App.AMControl -> ActiveMessageC;
-  App.AMSend -> ActiveMessageC.AMSend[AM_CONTROLLER];
-  App.Receive -> ActiveMessageC.Receive[AM_CONTROLLER];
-  
+  BlinkToRadioC.Boot -> MainC;
+  BlinkToRadioC.Leds -> LedsC;
+  BlinkToRadioC.Car -> CarC;
+  BlinkToRadioC.Timer0 -> Timer0;
+
+
+  BlinkToRadioC.Packet -> AM;
+  BlinkToRadioC.AMPacket -> AM.AMPacket;
+  BlinkToRadioC.AMControl -> AM;
+  BlinkToRadioC.AMSend -> AM.AMSend[AM_CONTROLLER];
+  BlinkToRadioC.Receive -> AM.Receive[AM_CONTROLLER];
 }
