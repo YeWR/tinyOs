@@ -13,27 +13,6 @@ module CarP @safe() {
     interface Timer<TMilli> as Timer0;
   }
 } implementation{
-
-    enum {
-        HEADER_1 = 0x01,
-        HEADER_2 = 0x02,
-        TYPE_SERVO_1 = 0x01,
-        TYPE_FORWARD = 0x04,
-        TYPE_BACK = 0x05,
-        TYPE_LEFT = 0x03,
-        TYPE_RIGHT = 0x02,
-        TYPE_PAUSE = 0x06,
-        TYPE_SERVO_2 = 0x07,
-        TYPE_SERVO_3 = 0x08,
-        FOOTER_1 = 0x0FF,
-        FOOTER_2 = 0x0FF,
-        FOOTER_3 = 0x00,
-        SERVO_DEFAULT = 3000,
-        SERVO_DELTA = 300,
-        SERVO_MIN = 700,
-        SERVO_MAX = 4300
-    };
-
     msp430_uart_union_config_t config1 = {
         {
             utxe: 1,
@@ -98,11 +77,6 @@ module CarP @safe() {
     }
 
     async event void HplMsp430UsartInterrupts.txDone() {
-    }
-
-    async command void Car.read() {
-        error_t error = SUCCESS;
-        signal Car.readDone(error, type);
     }
 
     command void Car.start() {
@@ -234,7 +208,7 @@ module CarP @safe() {
         return call Resource.request();
     }
 
-    command error_t Car.Home() {
+    command error_t Car.InitAll() {
         error_t error = SUCCESS;
         call Timer0.startOneShot(300);
         return error;
@@ -258,7 +232,7 @@ module CarP @safe() {
         return call Resource.request();
     }
 
-    command	error_t Car.InitRightServo(uint16_t value) {
+    command	error_t Car.InitMidServo(uint16_t value) {
         atomic {
             type = 0x07;
             m_value = value;
@@ -266,7 +240,7 @@ module CarP @safe() {
         return call Resource.request();
     }
 
-    command	error_t Car.InitMidServo(uint16_t value) {
+    command	error_t Car.InitRightServo(uint16_t value) {
         atomic {
             type = 0x08;
             m_value = value;

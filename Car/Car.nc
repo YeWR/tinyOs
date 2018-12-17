@@ -11,12 +11,12 @@ interface Car{
     command error_t Left(uint16_t value);
     command error_t Right(uint16_t value);
     command	error_t Pause();
-    command error_t Home();
+    command error_t InitAll();
     async command void read();
     event void readDone(error_t state, uint8_t data);
     command	error_t InitMaxSpeed(uint16_t value);
     command	error_t InitMinSpeed(uint16_t value);
     command	error_t InitLeftServo(uint16_t value);
-    command	error_t InitRightServo(uint16_t value);
     command	error_t InitMidServo(uint16_t value);
+    command	error_t InitRightServo(uint16_t value);
 }
