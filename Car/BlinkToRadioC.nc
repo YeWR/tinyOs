@@ -64,19 +64,18 @@ module BlinkToRadioC {
 }
 implementation {
 
-  enum{
-    ANGLE = 0x01,
-    FORWARD = 0x02,
-    BACKWARD = 0x03,
-    LEFT = 0x04,
-    RIGHT = 0x05,
-    PAUSE = 0x06,
-    ANGLE_SENC = 0x07,
-    ANGLE_THIRD = 0x08,
-    INITALL = 0x09
-  }
   
-  uint16_t counter = 0;
+  const uint16_t ANGLE = 0x01;
+  const uint16_t FORWARD = 0x02;
+  const uint16_t BACKWARD = 0x03;
+  const uint16_t LEFT = 0x04;
+  const uint16_t RIGHT = 0x05;
+  const uint16_t PAUSE = 0x06;
+  const uint16_t ANGLE_SENC = 0x07;
+  const uint16_t ANGLE_THIRD = 0x08;
+  const uint16_t INITALL = 0x09;
+  
+  uint16_t counter;
   message_t pkt;
   bool busy = FALSE;
 
