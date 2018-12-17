@@ -10,7 +10,7 @@ enum {
 
 typedef nx_struct BlinkToRadioMsg {
   nx_uint16_t type;
-  nx_uint16_t data;
+  nx_uint16_t value;
 } BlinkToRadioMsg;
 
 typedef nx_struct ButtonMsg{

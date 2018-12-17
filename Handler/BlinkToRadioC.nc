@@ -66,10 +66,11 @@ module BlinkToRadioC {
   uses interface SplitControl as SerialControl;
 }
 implementation {
-  bool buttons[6] = {FALSE,FALSE,FALSE,FALSE,FALSE,FALSE};
+  bool buttons[6] = {TRUE,TRUE,TRUE,TRUE,TRUE,TRUE};
   int counter = 0;
   uint16_t MOVE_SPEED = 500;
   uint8_t instruct = 0x00;
+  uint8_t led = 0x00;
   uint16_t joystickX;
   uint16_t joystickY;
   bool busy = FALSE;
@@ -92,7 +93,7 @@ implementation {
   }
   
   void ledShow(){
-      setLeds(instruct);
+      setLeds(led);
   }
   
   void getInputs(){
@@ -114,62 +115,72 @@ implementation {
 
     //检验按钮
         if (buttons[0] == FALSE){ //舵机1 smaller
+          led = 0x01;
           instruct = 0x01;
           sndPayload->type = 0x01;
-          sndPayload->data = 0;
+          sndPayload->value = 0;
           flag = TRUE;
         }
         else if (buttons[1] == FALSE){ //舵机1 bigger
+          led = 0x02;
           instruct = 0x01;
           sndPayload->type = 0x01;
-          sndPayload->data = 1;
+          sndPayload->value = 1;
           flag = TRUE;
         }
         else if (buttons[2] == FALSE){ //舵机2 smaller
+          led = 0x03;
           instruct = 0x07;
           sndPayload->type = 0x07;
-          sndPayload->data = 0;
+          sndPayload->value = 1;
           flag = TRUE;
         }
-        else if (buttons[3] == FALSE ){ //duoji2 bigger
-          instruct = 0x07;
-          sndPayload->type = 0x07;
-          sndPayload->data = 1;
+        else if (buttons[4] == FALSE ){ //duoji2 bigger
+          led = 0x05;
+          instruct = 0x08;
+          sndPayload->type = 0x08;
+          sndPayload->value = 1;
           flag = TRUE;
         }
-        else if ( buttons[4] == FALSE ){ //reset
+        else if ( buttons[5] == FALSE ){ //reset
+          led = 0x06;
           instruct = 0x10;
-          sndPayload->type = 0x09;
-          sndPayload->data = 0;
+          sndPayload->type = 0x10;
+          sndPayload->value = 0;
           flag = TRUE;
         }
 
     //检验摇杆
     if (flag == FALSE) {
       if ( joystickY < 500 ){ //前进
+        led = 0x01;
         instruct = 0x02;
         sndPayload->type = 0x02;
-        sndPayload->data = MOVE_SPEED;
+        sndPayload->value = MOVE_SPEED;
       }
       else if ( joystickY > 3500 ){  //后退
+        led = 0x02;
         instruct = 0x03;
         sndPayload->type = 0x03;
-        sndPayload->data = MOVE_SPEED;
+        sndPayload->value = MOVE_SPEED;
       }      
       else if (joystickX > 3500 ){  //左转
+        led = 0x03;
         instruct = 0x04;
         sndPayload->type = 0x04;
-        sndPayload->data = MOVE_SPEED;
+        sndPayload->value = MOVE_SPEED;
       }
       else if (joystickX < 500 ){  //右转
+        led = 0x04;
         instruct = 0x05;
         sndPayload->type = 0x05;
-        sndPayload->data = MOVE_SPEED;
+        sndPayload->value = MOVE_SPEED;
       }
       else {  //停止
+        led = 0x05;
         instruct = 0x06;  
         sndPayload->type = 0x06;
-        sndPayload->data = 0;
+        sndPayload->value = 0;
       }
     }
 
@@ -183,12 +194,12 @@ implementation {
     buttonMsg->buttonF = buttons[5];
     if (call SerialAMSend.send(AM_BROADCAST_ADDR, &pkt2, sizeof(ButtonMsg)) == SUCCESS){
     }
-
+    buttons[0]=buttons[1]=buttons[2]=buttons[3]=buttons[4]=buttons[5]=TRUE;
     if (!busy) {
       if (sndPayload == NULL) {
         return;
       }
-
+    
       ledShow();
       if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(BlinkToRadioMsg)) == SUCCESS) {
         busy = TRUE;
