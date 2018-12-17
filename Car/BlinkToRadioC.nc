@@ -120,51 +120,52 @@ implementation {
     switch(counter) {
       case 0:
         call Car.Forward(800);
-        setLeds(FORWARD);
+        call Leds.set(FORWARD);
+        //Leds.set(FORWARD);
         break;
       case 1:
         call Car.Backward(800);
-        setLeds(BACKWARD);
+        call Leds.set(BACKWARD);
         break;
       case 2:
         call Car.Left(800);
-        setLeds(LEFT);
+        call Leds.set(LEFT);
         break;
       case 3:
         call Car.Right(800);
-        setLeds(RIGHT);
+        call Leds.set(RIGHT);
         break;
       case 4:
         call Car.Pause();
-        setLeds(PAUSE);
+        call Leds.set(PAUSE);
         break;
       case 5:
         call Car.Angle(2400);
-        setLeds(ANGLE);
+        call Leds.set(ANGLE);
         break;
       case 6:
         call Car.Angle(4400);
-        setLeds(ANGLE);
+        call Leds.set(ANGLE);
         break;
       case 7:
         call Car.Angle_Senc(2400);
-        setLeds(ANGLE_SENC);
+        call Leds.set(ANGLE_SENC);
         break;
       case 8:
         call Car.Angle_Senc(4400);
-        setLeds(ANGLE_SENC);
+        call Leds.set(ANGLE_SENC);
         break;
       case 9:
         call Car.Angle_Third(2400);
-        setLeds(ANGLE_THIRD);
+        call Leds.set(ANGLE_THIRD);
         break;
       case 10:
         call Car.Angle_Third(4400);
-        setLeds(ANGLE_THIRD);
+        call Leds.set(ANGLE_THIRD);
         break;
       case 11:
         call Car.InitAll();
-        setLeds(INITALL);
+        call Leds.set(INITALL);
         break;
     }
     counter++;
