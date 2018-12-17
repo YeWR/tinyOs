@@ -63,12 +63,27 @@ module BlinkToRadioC {
   uses interface Car;
 }
 implementation {
+
+  enum{
+    ANGLE = 0x01,
+    FORWARD = 0x02,
+    BACKWARD = 0x03,
+    LEFT = 0x04,
+    RIGHT = 0x05,
+    PAUSE = 0x06,
+    ANGLE_SENC = 0x07,
+    ANGLE_THIRD = 0x08,
+    INITALL = 0x09
+  }
   
   uint16_t counter = 0;
   message_t pkt;
   bool busy = FALSE;
 
   void setLeds(uint16_t val) {
+    if (val > 7){
+      val %= 8;
+    }
     if (val & 0x01)
       call Leds.led0On();
     else 
@@ -112,42 +127,53 @@ implementation {
     switch(counter) {
       case 0:
         call Car.Forward(800);
+        setLeds(FORWARD);
         break;
       case 1:
         call Car.Backward(800);
+        setLeds(BACKWARD);
         break;
       case 2:
         call Car.Left(800);
+        setLeds(LEFT);
         break;
       case 3:
         call Car.Right(800);
+        setLeds(RIGHT);
         break;
       case 4:
         call Car.Pause();
+        setLeds(PAUSE);
         break;
       case 5:
         call Car.Angle(2400);
+        setLeds(ANGLE);
         break;
       case 6:
         call Car.Angle(4400);
+        setLeds(ANGLE);
         break;
       case 7:
         call Car.Angle_Senc(2400);
+        setLeds(ANGLE_SENC);
         break;
       case 8:
         call Car.Angle_Senc(4400);
+        setLeds(ANGLE_SENC);
         break;
       case 9:
         call Car.Angle_Third(2400);
+        setLeds(ANGLE_THIRD);
         break;
       case 10:
         call Car.Angle_Third(4400);
+        setLeds(ANGLE_THIRD);
         break;
       case 11:
-        call Car.Home();
+        call Car.InitAll();
+        setLeds(INITALL);
         break;
     }
-    call Car.read();
     counter++;
     if (counter < 12) {
       call Timer0.startOneShot(2000);
@@ -156,80 +182,41 @@ implementation {
 
   event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len){
     if (len == sizeof(BlinkToRadioMsg)) {
-      BlinkToRadioMsg* btrpkt = (BlinkToRadioMsg*)payload;
-      switch (btrpkt->type) {
+      
+      BlinkToRadioMsg* local_data = (BlinkToRadioMsg*)payload;
+
+      setLeds(local_data->type);
+
+      switch (local_data->type) {
         case 0x01:
-          call Car.Angle(btrpkt->value);
-          call Car.read();
+          call Car.Angle(local_data->value);
           break;
         case 0x02:
-          call Car.Forward(btrpkt->value);
-          call Car.read();
+          call Car.Forward(local_data->value);
           break;
         case 0x03:
-          call Car.Backward(btrpkt->value);
-          call Car.read();
+          call Car.Backward(local_data->value);
           break;
         case 0x04:
-          call Car.Left(btrpkt->value);
-          call Car.read();
+          call Car.Left(local_data->value);
           break;
         case 0x05:
-          call Car.Right(btrpkt->value);
-          call Car.read();
+          call Car.Right(local_data->value);
           break;
         case 0x06:
           call Car.Pause();
-          call Car.read();
           break;
         case 0x07:
-          call Car.Angle_Senc(btrpkt->value);
-          call Car.read();
+          call Car.Angle_Senc(local_data->value);
           break;
         case 0x08:
-          call Car.Angle_Third(btrpkt->value);
-          call Car.read();
+          call Car.Angle_Third(local_data->value);
           break;
         case 0x10:
-          call Car.Home();
-          call Car.read();
+          call Car.InitAll();
           break;
       }
     }
     return msg;
-  }
-
-  event void Car.readDone(error_t error, uint8_t data) {
-    if (error == SUCCESS) {
-      switch(data) {
-        case 0x02:
-          call Leds.set(2);
-          break;
-        case 0x03:
-          call Leds.set(6);
-          break;
-        case 0x04:
-          call Leds.set(4);
-          break;
-        case 0x05:
-          call Leds.set(1);
-          break;
-        case 0x06:
-          call Leds.set(0);
-          break;
-        case 0x01:
-          call Leds.set(3);
-          break;
-        case 0x07:
-          call Leds.set(5);
-          break;
-        case 0x08:
-          call Leds.set(7);
-          break;
-        default:
-          call Leds.set(0);
-          break;
-      }
-    }
   }
 }
