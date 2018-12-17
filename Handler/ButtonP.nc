@@ -1,9 +1,5 @@
 module ButtonP {
-    provides {
-        interface AdcConfigure<const msp430adc12_channel_config_t*> as AdcConfigX;
-        interface AdcConfigure<const msp430adc12_channel_config_t*> as AdcConfigY;
-    }
-    provides interface Button
+    provides interface Button;
     uses{
         interface HplMsp430GeneralIO as A_button;
         interface HplMsp430GeneralIO as B_button;

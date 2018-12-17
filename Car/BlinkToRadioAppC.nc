@@ -58,14 +58,14 @@ implementation {
   components ActiveMessageC;
   components BlinkToRadioC as App;
   components new TimerMilliC() as Timer0;
-  components new AMReceiverC(AM_JOYSTICKMSG) as JoyStickeReceiver;
+  components new AMReceiverC(AM_BLINKTORADIOMSG) as Receiver;
   components CarC;
-  components PrintfC;
   components SerialStartC;
   
 
   App.Boot -> MainC;
   App.Leds -> LedsC;
+  App.Car -> CarC;
   App.Timer0 -> Timer0;
   App.Packet -> ActiveMessageC;
   App.AMPacket -> ActiveMessageC.AMPacket;

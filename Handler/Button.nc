@@ -12,10 +12,10 @@ interface Button {
   command void pinvalueE();
   command void pinvalueF();
 
-  event void pinvalueADone(error_t error, bool isPressed);
-  event void pinvalueBDone(error_t error, bool isPressed);
-  event void pinvalueCDone(error_t error, bool isPressed);
-  event void pinvalueDDone(error_t error, bool isPressed);
-  event void pinvalueEDone(error_t error, bool isPressed);
-  event void pinvalueFDone(error_t error, bool isPressed);
+  event void pinvalueADone(error_t error, bool val);
+  event void pinvalueBDone(error_t error, bool val);
+  event void pinvalueCDone(error_t error, bool val);
+  event void pinvalueDDone(error_t error, bool val);
+  event void pinvalueEDone(error_t error, bool val);
+  event void pinvalueFDone(error_t error, bool val);
 }

@@ -58,9 +58,8 @@ implementation {
   components BlinkToRadioC as App;
   components new TimerMilliC() as Timer0;
   components ActiveMessageC;
-  components new AMSenderC(AM_BLINKTORADIOMSG);
-  components new AMReceiverC(AM_BLINKTORADIOMSG);
-  components SerialActiveMessageC;
+  components new AMSenderC(AM_BLINKTORADIO);
+  components new AMReceiverC(AM_BLINKTORADIO);
   components ButtonC;
   components JoyStickC;
 
@@ -69,14 +68,11 @@ implementation {
   
   App.Timer0 -> Timer0;
   
-  App.Packet -> ActiveMessageC;
+  App.Packet -> AMSenderC;
+  App.AMPacket -> AMSenderC;
   App.AMControl -> ActiveMessageC;
-  
   App.AMSend -> AMSenderC;
   App.Receive -> AMReceiverC;
-  
-  App.SerialAMSend -> SerialActiveMessageC.AMSend[AM_BUTTONMSG];
-  App.SerialControl -> SerialActiveMessageC;
 
   App.Button->ButtonC.Button;
   
