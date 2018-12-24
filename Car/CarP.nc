@@ -91,26 +91,35 @@ module CarP @safe() {
         call Timer0.startOneShot(400);
     }
 
+    uint16_t max2(uint16_t x1, uint16_t x2){
+        if (x1 > x2){
+            return x1;
+        }
+        else{
+            return x2;
+        }
+    }
+
+    uint16_t min2(uint16_t x1, uint16_t x2){
+        if (x1 > x2){
+            return x2;
+        }
+        else{
+            return x1;
+        }
+    }
+
     command error_t Car.Angle(uint16_t value) {
         atomic {
             type = 0x01;
             if (value == 1) {
-                angel1 -= 400;
-                if (angel1 < min_angel) {
-                    angel1 = min_angel;
-                }
+                angel1 = min2(angel1 - 400, min_angel);
             } 
             else if (value == 0) {
-                angel1 += 400;
-                if (angel1 > max_angel) {
-                    angel1 = max_angel;
-                }
-            } 
-            else if (value >= min_angel) {
-                angel1 = value;
+                angel1 = max2(angel1 + 400, max_angel);
             }
+            m_value = angel1;
         }
-        m_value = angel1;
         return call Resource.request();
   }
 
@@ -118,20 +127,11 @@ module CarP @safe() {
         atomic {
             type = 0x07;
             if (value == 1) {
-                angel2 -= 400;
-                if (angel2 < min_angel) {
-                    angel2 = min_angel;
-                }
+                angel2 = min2(angel2 - 400, min_angel);
             } 
             else if (value == 0) {
-                angel2 += 400;
-                if (angel2 > max_angel) {
-                    angel2 = max_angel;
-                }
+                angel2 = max2(angel2 + 400, min_angel);
             } 
-            else if (value >= min_angel) {
-                angel2 = value;
-            }
             m_value = angel2;
         }
         return call Resource.request();
@@ -141,20 +141,11 @@ module CarP @safe() {
         atomic {
             type = 0x08;
             if (value == 1) {
-                angel3 -= 400;
-                if (angel3 < min_angel) {
-                    angel3 = min_angel;
-                }
+                angel3 = min2(angel3 - 400, min_angel);
             } 
             else if (value == 0) {
-                angel3 += 400;
-                if (angel3 > max_angel) {
-                    angel3 = max_angel;
-                }
+                angel3 = max2(angel3 + 400, min_angel);
             } 
-            else if (value >= min_angel) {
-                angel3 = value;
-            }
             m_value = angel3;
         }
         return call Resource.request();
@@ -163,10 +154,8 @@ module CarP @safe() {
     command error_t Car.Forward(uint16_t value) {
         atomic {
             type = 0x02;
-            if (value < min_speed)
-                value = min_speed;
-            if (value > max_speed)
-                value = max_speed;
+            value = min2(value, min_speed);
+            value = max2(value, max_speed);
             m_value = value;
         }
         return call Resource.request();
@@ -175,10 +164,8 @@ module CarP @safe() {
     command	error_t Car.Backward(uint16_t value) {
         atomic {
             type = 0x03;
-            if (value < min_speed)
-                value = min_speed;
-            if (value > max_speed)
-                value = max_speed;
+            value = min2(value, min_speed);
+            value = max2(value, max_speed);
             m_value = value;
         }
         return call Resource.request();
