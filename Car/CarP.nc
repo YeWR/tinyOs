@@ -56,13 +56,13 @@ module CarP @safe() {
             call Timer0.startOneShot(400);
             break;
         case 2:
-            angel2 = 2600;
+            angel2 = 2400;
             m_value = angel2;
             call Car.InitMidServo(angel2);
             call Timer0.startOneShot(400);
             break;
         case 3:
-            angel3 = 3400;
+            angel3 = 3200;
             m_value = angel3;
             call Car.InitRightServo(angel3);
             call Timer0.startOneShot(400);
@@ -81,12 +81,12 @@ module CarP @safe() {
 
     command void Car.start() {
         angel1 = 3200;
-        angel2 = 2600;
-        angel3 = 3400;
-        min_angel = 1800;
-        max_angel = 5000;
+        angel2 = 2400;
+        angel3 = 3200;
+        min_angel = 1600;
+        max_angel = 4800;
         homing_cnt = 0;
-        call Car.InitMaxSpeed(1600);
+        call Car.InitMaxSpeed(1200);
         call Car.InitMinSpeed(0);
         call Timer0.startOneShot(400);
     }
