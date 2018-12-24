@@ -56,13 +56,13 @@ module CarP @safe() {
             call Timer0.startOneShot(400);
             break;
         case 2:
-            angel2 = 2400;
+            angel2 = 2600;
             m_value = angel2;
             call Car.InitMidServo(angel2);
             call Timer0.startOneShot(400);
             break;
         case 3:
-            angel3 = 3200;
+            angel3 = 3400;
             m_value = angel3;
             call Car.InitRightServo(angel3);
             call Timer0.startOneShot(400);
@@ -81,12 +81,12 @@ module CarP @safe() {
 
     command void Car.start() {
         angel1 = 3200;
-        angel2 = 2400;
-        angel3 = 3200;
-        min_angel = 1600;
-        max_angel = 4800;
+        angel2 = 2600;
+        angel3 = 3400;
+        min_angel = 1800;
+        max_angel = 5000;
         homing_cnt = 0;
-        call Car.InitMaxSpeed(1200);
+        call Car.InitMaxSpeed(1600);
         call Car.InitMinSpeed(0);
         call Timer0.startOneShot(400);
     }
@@ -113,10 +113,10 @@ module CarP @safe() {
         atomic {
             type = 0x01;
             if (value == 1) {
-                angel1 = min2(angel1 - 400, min_angel);
+                angel1 = max2(angel1 - 400, min_angel);
             } 
             else if (value == 0) {
-                angel1 = max2(angel1 + 400, max_angel);
+                angel1 = min2(angel1 + 400, max_angel);
             }
             m_value = angel1;
         }
@@ -127,10 +127,10 @@ module CarP @safe() {
         atomic {
             type = 0x07;
             if (value == 1) {
-                angel2 = min2(angel2 - 400, min_angel);
+                angel2 = max2(angel2 - 400, min_angel);
             } 
             else if (value == 0) {
-                angel2 = max2(angel2 + 400, min_angel);
+                angel2 = min2(angel2 + 400, max_angel);
             } 
             m_value = angel2;
         }
@@ -141,10 +141,10 @@ module CarP @safe() {
         atomic {
             type = 0x08;
             if (value == 1) {
-                angel3 = min2(angel3 - 400, min_angel);
+                angel3 = max2(angel3 - 400, min_angel);
             } 
             else if (value == 0) {
-                angel3 = max2(angel3 + 400, min_angel);
+                angel3 = min2(angel3 + 400, max_angel);
             } 
             m_value = angel3;
         }
@@ -154,8 +154,8 @@ module CarP @safe() {
     command error_t Car.Forward(uint16_t value) {
         atomic {
             type = 0x02;
-            value = min2(value, min_speed);
-            value = max2(value, max_speed);
+            value = max2(value, min_speed);
+            value = min2(value, max_speed);
             m_value = value;
         }
         return call Resource.request();
@@ -164,8 +164,8 @@ module CarP @safe() {
     command	error_t Car.Backward(uint16_t value) {
         atomic {
             type = 0x03;
-            value = min2(value, min_speed);
-            value = max2(value, max_speed);
+            value = max2(value, min_speed);
+            value = min2(value, max_speed);
             m_value = value;
         }
         return call Resource.request();

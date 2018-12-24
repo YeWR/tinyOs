@@ -38,22 +38,22 @@
 #include "BlinkToRadio.h"
 
 module BlinkToRadioC {
-  uses interface Boot;
-  uses interface Leds;
-  uses interface Timer<TMilli> as Timer0;
-  uses interface Packet;
-  uses interface AMPacket;
-  uses interface AMSend;
-  uses interface Receive;
-  uses interface SplitControl as AMControl;
-  uses interface Read<uint16_t> as ReadX;
-  uses interface Read<uint16_t> as ReadY;
-  uses interface Button;
+  uses {
+    interface Boot;
+    interface Leds;
+    interface Timer<TMilli> as Timer0;
+    interface Packet;
+    interface AMPacket;
+    interface AMSend;
+    interface SplitControl as AMControl;
+    interface Read<uint16_t> as ReadX;
+    interface Read<uint16_t> as ReadY;
+    interface Button;
+  }
 }
 implementation {
-  bool status[6] = {TRUE,TRUE,TRUE,TRUE,TRUE,TRUE};
+  bool buttonStatus[6] = {TRUE,TRUE,TRUE,TRUE,TRUE,TRUE};
   int counter = 0;
-  uint16_t MOVE_SPEED = 500;
   uint8_t led = 0x00;
   uint16_t posX;
   uint16_t posY;
@@ -76,56 +76,45 @@ implementation {
   }
   
   
-  void getInputs(){
-      call ReadX.read();
-      call ReadY.read();
-      call Button.readA();
-      call Button.readB();
-      call Button.readC();
-      call Button.readD();
-      call Button.readE();
-      call Button.readF();
-  }
-  
   void sendInstruct(){
     BlinkToRadioMsg* sndPayload;
-    bool flag = FALSE;
+    bool buttonFlag = FALSE;
     sndPayload = (BlinkToRadioMsg*)(call Packet.getPayload(&pkt, sizeof(BlinkToRadioMsg)));
 
     //检验按钮
-    if (status[0] == FALSE){
+    if (buttonStatus[0] == FALSE){
       led = 0x01;
       sndPayload->type = 0x01;
       sndPayload->value = 0;
-      flag = TRUE;
+      buttonFlag = TRUE;
     }
-    else if (status[1] == FALSE){
+    else if (buttonStatus[1] == FALSE){
       led = 0x02;
       sndPayload->type = 0x01;
       sndPayload->value = 1;
-      flag = TRUE;
+      buttonFlag = TRUE;
     }
-    else if (status[2] == FALSE){
+    else if (buttonStatus[2] == FALSE){
       led = 0x03;
       sndPayload->type = 0x07;
       sndPayload->value = 1;
-      flag = TRUE;
+      buttonFlag = TRUE;
     }
-    else if (status[4] == FALSE ){
+    else if (buttonStatus[4] == FALSE ){
       led = 0x05;
       sndPayload->type = 0x07;
       sndPayload->value = 0;
-      flag = TRUE;
+      buttonFlag = TRUE;
     }
-    else if ( status[5] == FALSE ){
+    else if ( buttonStatus[5] == FALSE ){
       led = 0x06;
       sndPayload->type = 0x10;
       sndPayload->value = 0;
-      flag = TRUE;
+      buttonFlag = TRUE;
     }
 
     //检验摇杆
-    if (flag == FALSE) {
+    if (buttonFlag == FALSE) {
       if ( posY < 500 ){ //前进
         led = 0x01;
         sndPayload->type = 0x02;
@@ -153,7 +142,7 @@ implementation {
       }
     }
 
-    status[0]=status[1]=status[2]=status[3]=status[4]=status[5]=TRUE;
+    buttonStatus[0]=buttonStatus[1]=buttonStatus[2]=buttonStatus[3]=buttonStatus[4]=buttonStatus[5]=TRUE;
     if (!busy) {
       if (sndPayload == NULL) {
         return;
@@ -165,7 +154,7 @@ implementation {
     }
   }
   
-  void addInstruct(){
+  void checkSendReady(){
       counter ++;
       if(counter >= 8){
           counter = 0;
@@ -176,9 +165,7 @@ implementation {
   event void Boot.booted() {
     call AMControl.start();
     call Button.start();
-    call Leds.led0On();
-    call Leds.led1On();
-    call Leds.led2On();
+    setLeds(0x07);
   }
 
   event void AMControl.startDone(error_t err) {
@@ -194,7 +181,14 @@ implementation {
   
   
   event void Timer0.fired() {
-    getInputs();
+    call ReadX.read();
+    call ReadY.read();
+    call Button.readA();
+    call Button.readB();
+    call Button.readC();
+    call Button.readD();
+    call Button.readE();
+    call Button.readF();
   }
 
   event void AMSend.sendDone(message_t* msg, error_t err) {
@@ -203,25 +197,18 @@ implementation {
     }
   }
   
-  
-  event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len){
-    if (len == sizeof(BlinkToRadioMsg)) {
-      BlinkToRadioMsg* btrpkt = (BlinkToRadioMsg*)payload;
-    }
-    return msg;
-  }
-  
-  event void ReadX.readDone(error_t error, uint16_t val){
-      if(error==SUCCESS){
+    
+  event void ReadX.readDone(error_t err, uint16_t val){
+      if(err==SUCCESS){
           posX = val;
-          addInstruct();
+          checkSendReady();
       }
   }
   
-  event void ReadY.readDone(error_t error, uint16_t val){
-      if(error==SUCCESS){
+  event void ReadY.readDone(error_t err, uint16_t val){
+      if(err==SUCCESS){
           posY = val;
-          addInstruct();
+          checkSendReady();
       }
   }
   
@@ -231,38 +218,38 @@ implementation {
   
   event void Button.readADone(error_t err, bool val){
       if(err == SUCCESS){
-          status[0] = val;
-          addInstruct();
+          buttonStatus[0] = val;
+          checkSendReady();
       }
   }
   event void Button.readBDone(error_t err, bool val){
       if(err == SUCCESS){
-          status[1] = val;
-          addInstruct();
+          buttonStatus[1] = val;
+          checkSendReady();
       }
   }
   event void Button.readCDone(error_t err, bool val){
       if(err == SUCCESS){
-          status[2] = val;
-          addInstruct();
+          buttonStatus[2] = val;
+          checkSendReady();
       }
   }
   event void Button.readDDone(error_t err, bool val){
       if(err == SUCCESS){
-          status[3] = val;
-          addInstruct();
+          buttonStatus[3] = val;
+          checkSendReady();
       }
   }
   event void Button.readEDone(error_t err, bool val){
       if(err == SUCCESS){
-          status[4] = val;
-          addInstruct();
+          buttonStatus[4] = val;
+          checkSendReady();
       }
   }
   event void Button.readFDone(error_t err, bool val){
       if(err == SUCCESS){
-          status[5] = val;
-          addInstruct();
+          buttonStatus[5] = val;
+          checkSendReady();
       }
   }
 }

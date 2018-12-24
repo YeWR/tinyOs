@@ -45,9 +45,7 @@ implementation {
   components new TimerMilliC() as Timer0;
   components ActiveMessageC;
   components new AMSenderC(AM_BLINKTORADIO);
-  components new AMReceiverC(AM_BLINKTORADIO);
-  components ButtonC;
-  components JoyStickC;
+  components HandlerC;
   App.Boot -> MainC;
   App.Leds -> LedsC;
   App.Timer0 -> Timer0;
@@ -55,8 +53,7 @@ implementation {
   App.AMPacket -> AMSenderC;
   App.AMControl -> ActiveMessageC;
   App.AMSend -> AMSenderC;
-  App.Receive -> AMReceiverC;
-  App.Button->ButtonC.Button;
-  App.ReadX->JoyStickC.ReadX;
-  App.ReadY->JoyStickC.ReadY;
+  App.Button->HandlerC.Button;
+  App.ReadX->HandlerC.ReadX;
+  App.ReadY->HandlerC.ReadY;
 }

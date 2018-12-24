@@ -1,5 +1,9 @@
-module ButtonP {
-    provides interface Button;
+module HandlerP {
+    provides {
+        interface Button;
+        interface AdcConfigure<const msp430adc12_channel_config_t*> as AdcConfigX;
+        interface AdcConfigure<const msp430adc12_channel_config_t*> as AdcConfigY;
+    }
     uses{
         interface HplMsp430GeneralIO as A_button;
         interface HplMsp430GeneralIO as B_button;
@@ -17,6 +21,28 @@ implementation {
     bool D_isPressed;
     bool E_isPressed;    
     bool F_isPressed;
+
+    const msp430adc12_channel_config_t config1 = {
+		inch: INPUT_CHANNEL_A6,
+		sref: REFERENCE_VREFplus_AVss,
+		ref2_5v: REFVOLT_LEVEL_2_5,
+		adc12ssel: SHT_SOURCE_ACLK,
+		adc12div: SHT_CLOCK_DIV_1,
+		sht: SAMPLE_HOLD_4_CYCLES,
+		sampcon_ssel: SAMPCON_SOURCE_SMCLK,
+		sampcon_id: SAMPCON_CLOCK_DIV_1
+	};
+
+	const msp430adc12_channel_config_t config2 = {
+		inch: INPUT_CHANNEL_A7,
+		sref: REFERENCE_VREFplus_AVss,
+		ref2_5v: REFVOLT_LEVEL_2_5,
+		adc12ssel: SHT_SOURCE_ACLK,
+		adc12div: SHT_CLOCK_DIV_1,
+		sht: SAMPLE_HOLD_4_CYCLES,
+		sampcon_ssel: SAMPCON_SOURCE_SMCLK,
+		sampcon_id: SAMPCON_CLOCK_DIV_1
+	};
 
     command void Button.start(){
         error_t err = SUCCESS;
@@ -78,4 +104,11 @@ implementation {
         signal Button.readFDone(err, F_isPressed);
     }
     
+    async command const msp430adc12_channel_config_t* AdcConfigX.getConfiguration() {
+    	return &config1;
+  	}
+
+  	async command const msp430adc12_channel_config_t* AdcConfigY.getConfiguration() {
+    	return &config2;
+  	}
 }

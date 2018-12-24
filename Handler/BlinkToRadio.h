@@ -4,8 +4,9 @@
 #define BLINKTORADIO_H
 
 enum {
-  AM_BLINKTORADIO = 88,
-  TIMER_PERIOD_MILLI = 250
+  AM_BLINKTORADIO = 6,
+  TIMER_PERIOD_MILLI = 250,
+  MOVE_SPEED = 500
 };
 
 typedef nx_struct BlinkToRadioMsg {
